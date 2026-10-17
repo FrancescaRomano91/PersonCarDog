@@ -11,18 +11,24 @@ public class DogAdoption {
     private Date date;
     private int fee;
     private String contract;
+    private String status;
 
     public DogAdoption() {
         this.id = UUID.randomUUID().toString();
     }
 
     public DogAdoption(Person adopter, Dog dog, Date date, int fee, String contract) {
+        this(adopter, dog, date, fee, contract, "ACTIVE");
+    }
+
+    public DogAdoption(Person adopter, Dog dog, Date date, int fee, String contract, String status) {
         this.id = UUID.randomUUID().toString();
         this.adopter = adopter;
         this.dog = dog;
         this.date = date;
         this.fee = fee;
         this.contract = contract;
+        this.status = status;
     }
 
     public String getId() {
@@ -73,6 +79,14 @@ public class DogAdoption {
         this.contract = contract;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         return "DogAdoption{" +
@@ -82,6 +96,7 @@ public class DogAdoption {
                 ", date=" + date +
                 ", fee=" + fee +
                 ", contract='" + contract + '\'' +
+                ", status='" + status + '\'' +
                 '}';
     }
 }

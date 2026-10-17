@@ -1,5 +1,7 @@
 package org.example.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class Person {
@@ -9,6 +11,7 @@ public class Person {
     private int age;
     private Car car;
     private Dog dog;
+    private List<Dog> dogs = new ArrayList<>();
 
     public Person(){
         this.id = UUID.randomUUID().toString();
@@ -60,8 +63,24 @@ public class Person {
         this.dog = dog;
     }
 
+    public List<Dog> getDogs() {
+        return dogs;
+    }
+
+    public void setDogs(List<Dog> dogs) {
+        this.dogs = dogs;
+    }
+
     @Override
     public String toString() {
-        return "Person{id='" + id + "', name='" + name + "', age=" + age + "}";
+        StringBuilder dogIds = new StringBuilder();
+        for (Dog d : dogs) {
+            if (dogIds.length() > 0) {
+                dogIds.append(", ");
+            }
+            dogIds.append(d.getId());
+        }
+        return "Person{id='" + id + "', name='" + name + "', age=" + age +
+                ", dogIds=[" + dogIds + "]}";
     }
 }

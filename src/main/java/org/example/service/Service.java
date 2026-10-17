@@ -4,6 +4,7 @@ import org.example.repository.Repository;
 import org.example.model.Car;
 import org.example.model.CarTransaction;
 import org.example.model.Dog;
+import org.example.model.DogAdoption;
 import org.example.model.Person;
 import org.example.utils.ResultOperation;
 
@@ -97,10 +98,21 @@ public class Service {
         if (p.getCar() != null) {
             p.setCar(null);
         }
-        // Clear dog relation if owns one
-        if (p.getDog() != null) {
-            p.getDog().setOwner(null);
-            p.setDog(null);
+
+        // Cascade dog relations (many-to-many): remove this person from every dog
+        // and mark all related adoptions as RETURNED (history is kept).
+        for (Dog dog : new ArrayList<>(p.getDogs())) {
+            dog.getOwners().removeIf(owner -> owner.getId().equals(p.getId()));
+        }
+        p.getDogs().clear();
+
+        for (DogAdoption adoption : repo.getAllDogAdoptions()) {
+            if (adoption.getAdopter() != null
+                    && adoption.getAdopter().getId().equals(p.getId())
+                    && "ACTIVE".equals(adoption.getStatus())) {
+                adoption.setStatus("RETURNED");
+                adoption.setContract(adoption.getContract() + " - RETURNED");
+            }
         }
 
         boolean removed = repo.removePerson(id.trim());
@@ -291,10 +303,20 @@ public class Service {
             return result.setter(false, "Dog not found with id: " + id, "Dog", System.currentTimeMillis());
         }
 
-        // Clear owner relation if dog has owner
-        if (d.getOwner() != null) {
-            d.getOwner().setDog(null);
-            d.setOwner(null);
+        // Cascade dog relations (many-to-many): remove this dog from every owner
+        // and mark all related adoptions as RETURNED (history is kept).
+        for (Person owner : new ArrayList<>(d.getOwners())) {
+            owner.getDogs().removeIf(dog -> dog.getId().equals(d.getId()));
+        }
+        d.getOwners().clear();
+
+        for (DogAdoption adoption : repo.getAllDogAdoptions()) {
+            if (adoption.getDog() != null
+                    && adoption.getDog().getId().equals(d.getId())
+                    && "ACTIVE".equals(adoption.getStatus())) {
+                adoption.setStatus("RETURNED");
+                adoption.setContract(adoption.getContract() + " - RETURNED");
+            }
         }
 
         boolean removed = repo.removeDog(id.trim());
@@ -372,8 +394,9 @@ public class Service {
         return result.setter(true, "Car bought successfully: " + transaction, "CarTransaction", System.currentTimeMillis(), transaction);
     }
 
-    // ========== DOG ADOPTION ==========
-    public static ResultOperation adoptDog(org.example.model.Person adopter, org.example.model.Dog dog, int fee, Repository repo) {
+    // ========== DOG ADOPTION (MANY-TO-MANY / SHARED CUSTODY) ==========
+
+    public static ResultOperation adoptDog(Person adopter, Dog dog, int fee, Repository repo) {
         System.out.println("Welcome to ADOPT DOG");
         ResultOperation result = new ResultOperation();
 
@@ -387,41 +410,116 @@ public class Service {
             return result.setter(false, "Dog not found in repository.", "DogAdoption", System.currentTimeMillis());
         }
 
-        // 3. adopter must not already own a dog
-        if (adopter.getDog() != null) {
-            return result.setter(false, "Adopter already owns a dog.", "DogAdoption", System.currentTimeMillis());
-        }
-
-        // 4. dog must not already have an owner
-        if (dog.getOwner() != null) {
-            return result.setter(false, "Dog already has an owner.", "DogAdoption", System.currentTimeMillis());
-        }
-
-        // 5. adopter must be an adult
+        // 3. adopter must be an adult
         if (adopter.getAge() < 18) {
             return result.setter(false, "Adopter must be an adult.", "DogAdoption", System.currentTimeMillis());
         }
 
-        // 6. fee >= 0
+        // 4. fee >= 0
         if (fee < 0) {
             return result.setter(false, "Fee cannot be negative.", "DogAdoption", System.currentTimeMillis());
         }
 
-        // On success: establish bidirectional relation
-        adopter.setDog(dog);
-        dog.setOwner(adopter);
+        // 5. no duplicate ACTIVE pair (adoption record is the source of truth)
+        for (DogAdoption existing : repo.getAllDogAdoptions()) {
+            if (existing.getAdopter() != null && existing.getDog() != null
+                    && existing.getAdopter().getId().equals(adopter.getId())
+                    && existing.getDog().getId().equals(dog.getId())
+                    && "ACTIVE".equals(existing.getStatus())) {
+                return result.setter(false, "This person is already actively linked to this dog.", "DogAdoption", System.currentTimeMillis());
+            }
+        }
 
-        // Create and persist DogAdoption
-        org.example.model.DogAdoption adoption = new org.example.model.DogAdoption(
+        // 6. person may have at most 3 active dogs
+        if (adopter.getDogs().size() >= 3) {
+            return result.setter(false, "Person already has the maximum number of dogs.", "DogAdoption", System.currentTimeMillis());
+        }
+
+        // 7. dog may have at most 2 active owners
+        if (dog.getOwners().size() >= 2) {
+            return result.setter(false, "Dog already has the maximum number of owners.", "DogAdoption", System.currentTimeMillis());
+        }
+
+        // On success: maintain both sides of the relationship + persist the record
+        adopter.getDogs().add(dog);
+        dog.getOwners().add(adopter);
+
+        DogAdoption adoption = new DogAdoption(
                 adopter,
                 dog,
-                new java.util.Date(),
+                new Date(),
                 fee,
-                "Dog adopted for " + fee
+                "Dog adopted for " + fee,
+                "ACTIVE"
         );
         repo.addDogAdoption(adoption);
 
+        System.out.println("Adoption created: " + adoption);
         return result.setter(true, "Dog adopted successfully.", "DogAdoption", System.currentTimeMillis(), adoption);
+    }
+
+    public static ResultOperation returnDog(Person person, Dog dog, Repository repo) {
+        System.out.println("Welcome to RETURN DOG");
+        ResultOperation result = new ResultOperation();
+
+        if (person == null || !repo.getAllPeople().contains(person)) {
+            return result.setter(false, "Person not found in repository.", "DogAdoption", System.currentTimeMillis());
+        }
+
+        if (dog == null || !repo.getAllDogs().contains(dog)) {
+            return result.setter(false, "Dog not found in repository.", "DogAdoption", System.currentTimeMillis());
+        }
+
+        // Find the ACTIVE adoption for this exact pair
+        DogAdoption active = null;
+        for (DogAdoption adoption : repo.getAllDogAdoptions()) {
+            if (adoption.getAdopter() != null && adoption.getDog() != null
+                    && adoption.getAdopter().getId().equals(person.getId())
+                    && adoption.getDog().getId().equals(dog.getId())
+                    && "ACTIVE".equals(adoption.getStatus())) {
+                active = adoption;
+                break;
+            }
+        }
+
+        if (active == null) {
+            return result.setter(false, "No active adoption found for this person and dog.", "DogAdoption", System.currentTimeMillis());
+        }
+
+        // Remove the link only for this pair (the dog may keep other owners)
+        person.getDogs().removeIf(d -> d.getId().equals(dog.getId()));
+        dog.getOwners().removeIf(p -> p.getId().equals(person.getId()));
+
+        // Mark the record as RETURNED (keep it in history)
+        active.setStatus("RETURNED");
+        active.setContract(active.getContract() + " - RETURNED");
+
+        System.out.println("Adoption updated: " + active);
+        return result.setter(true, "Dog returned successfully.", "DogAdoption", System.currentTimeMillis(), active);
+    }
+
+    public static ResultOperation getDogsByOwner(Person person, Repository repo) {
+        System.out.println("Welcome to GET DOGS BY OWNER");
+        ResultOperation result = new ResultOperation();
+
+        if (person == null || !repo.getAllPeople().contains(person)) {
+            return result.setter(false, "Person not found in repository.", "Dog", System.currentTimeMillis());
+        }
+
+        ArrayList<Dog> list = new ArrayList<>(person.getDogs());
+        return result.setter(true, "Total dogs: " + list.size(), "Dog", System.currentTimeMillis(), list);
+    }
+
+    public static ResultOperation getOwnersByDog(Dog dog, Repository repo) {
+        System.out.println("Welcome to GET OWNERS BY DOG");
+        ResultOperation result = new ResultOperation();
+
+        if (dog == null || !repo.getAllDogs().contains(dog)) {
+            return result.setter(false, "Dog not found in repository.", "Person", System.currentTimeMillis());
+        }
+
+        ArrayList<Person> list = new ArrayList<>(dog.getOwners());
+        return result.setter(true, "Total owners: " + list.size(), "Person", System.currentTimeMillis(), list);
     }
 
     public static ResultOperation getDogAdoptionById(String id, Repository repo) {
@@ -429,7 +527,7 @@ public class Service {
         if (id == null || id.trim().isEmpty()) {
             return result.setter(false, "ID cannot be empty.", "DogAdoption", System.currentTimeMillis());
         }
-        org.example.model.DogAdoption da = repo.getDogAdoptionById(id.trim());
+        DogAdoption da = repo.getDogAdoptionById(id.trim());
         if (da == null) {
             return result.setter(false, "DogAdoption not found with id: " + id, "DogAdoption", System.currentTimeMillis());
         }
@@ -438,7 +536,7 @@ public class Service {
 
     public static ResultOperation getAllDogAdoptions(Repository repo) {
         ResultOperation result = new ResultOperation();
-        java.util.ArrayList<org.example.model.DogAdoption> list = repo.getAllDogAdoptions();
+        ArrayList<DogAdoption> list = repo.getAllDogAdoptions();
         return result.setter(true, "Total dog adoptions: " + list.size(), "DogAdoption", System.currentTimeMillis(), list);
     }
 }
