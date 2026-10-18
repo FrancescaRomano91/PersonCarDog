@@ -1,3 +1,4 @@
+
 package org.example.utils;
 
 import com.github.javafaker.Faker;
@@ -10,7 +11,6 @@ import org.example.repository.Repository;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 public class DataSeeder {
 
@@ -20,74 +20,59 @@ public class DataSeeder {
         List<Car> temporaryCars = new ArrayList<>();
         List<Person> temporaryPeople = new ArrayList<>();
 
-        //  1. Generate 3 Cars (Objects 1, 2 y 3)
+        // 1. Generate 3 Cars
         for (int i = 0; i < 3; i++) {
             Car car = new Car(
                     faker.company().name(),
                     faker.commerce().productName(),
                     faker.number().numberBetween(1995, 2025)
             );
+
             repo.addCar(car);
             temporaryCars.add(car);
         }
 
-        // 2. Generate 3 People (Objects 4, 5 y 6)
-      /*  for (int i = 0; i < 3; i++) {
+        // 2. Generate 3 People
+        for (int i = 0; i < 3; i++) {
             Person person = new Person(
                     faker.name().fullName(),
                     faker.number().numberBetween(18, 80)
             );
+
             temporaryPeople.add(person);
-        }*/
-        Person person = new Person(
-                faker.name().fullName(),
-                faker.number().numberBetween(18, 80)
-        );
-        temporaryPeople.add(person);
-        Dog dog = new Dog("faker","breed", 18, "aaaa");
-        Person person2 = new Person(
-                faker.name().fullName(),
-                faker.number().numberBetween(18, 80),
-                dog
-        );
-        temporaryPeople.add(person);
+        }
 
-        // Service.buyCar needs a valid seller and buyer
-        // so we assign the first car to the first person
+        // Assign cars to people
         temporaryPeople.get(0).setCar(temporaryCars.get(0));
-
-        // Person 1 will not have a car
-        // Person 2 will have a random car
         temporaryPeople.get(2).setCar(temporaryCars.get(1));
 
         // Add people to repository
-        for (Person p : temporaryPeople) {
-            repo.addPerson(p);
+        for (Person person : temporaryPeople) {
+            repo.addPerson(person);
         }
 
-        // 3. Generate 2 Dogs (Objects 7 and 8)
+        // 3. Generate 2 Dogs
         for (int i = 0; i < 2; i++) {
             Dog dog = new Dog(
                     faker.dog().name(),
                     faker.dog().breed(),
                     faker.number().numberBetween(1, 15)
             );
+
             repo.addDog(dog);
         }
 
-        // 4. Generate 2 fake transactions (Objects 9 and 10)
-        // We use car 2, people 1 and 2
+        // 4. Generate 2 Car Transactions
         CarTransaction tx1 = new CarTransaction(
-                temporaryPeople.get(1), // buyer
-                temporaryPeople.get(2), // seller
+                temporaryPeople.get(1),
+                temporaryPeople.get(2),
                 new Date(),
                 temporaryCars.get(2),
                 faker.lorem().sentence()
         );
-        // Add transaction to repository
+
         repo.addCarTransaction(tx1);
 
-        // Generate transaction 2
         CarTransaction tx2 = new CarTransaction(
                 temporaryPeople.get(2),
                 temporaryPeople.get(0),
@@ -95,13 +80,13 @@ public class DataSeeder {
                 temporaryCars.get(2),
                 faker.lorem().sentence()
         );
-        // Add transaction to repository
+
         repo.addCarTransaction(tx2);
 
         // Print verification
         System.out.println("=== DATA SEEDING COMPLETE ===");
         System.out.println("People: 3 | Cars: 3 | Dogs: 2 | Transactions: 2");
-        System.out.println("TOTAL NEW INSTANCIES AT REPO: 10");
+        System.out.println("TOTAL OBJECTS IN REPOSITORY: 10");
         System.out.println("=============================");
     }
 }

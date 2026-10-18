@@ -1,5 +1,7 @@
 package org.example.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class Person {
@@ -8,46 +10,15 @@ public class Person {
     private String name;
     private int age;
     private Car car;
-    private Dog dog;
+    private List <Dog> dogs = new ArrayList<>();
 
     public Person(){
         this.id = UUID.randomUUID().toString();
     }
-    public Person(String name, int age){
+
+    public Person(String name, int age) {
         this.id = UUID.randomUUID().toString();
         this.name = name;
-        this.age = age;
-    }
-
-    public Person(String name, int age, Dog dog) {
-        this.id = UUID.randomUUID().toString();
-        this.name = name;
-        this.age = age;
-        this.dog= dog;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Dog getDog() {
-        return dog;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setDog(Dog dog) {
-        this.dog = dog;
-    }
-
-
-    public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
         this.age = age;
     }
 
@@ -55,16 +26,42 @@ public class Person {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getName() {
+        return name;
+    }
+
+    public int getAge() {
+        return age;
     }
 
     public Car getCar() {
         return car;
     }
 
+    public List<Dog> getDogs() {
+        return dogs;
+    }
+
+
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
     public void setCar(Car car) {
         this.car = car;
+    }
+
+    public void setDogs(List<Dog> dogs) {
+        this.dogs = dogs;
     }
 
     @Override
