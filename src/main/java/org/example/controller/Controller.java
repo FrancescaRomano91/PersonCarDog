@@ -1,18 +1,16 @@
+
 package org.example.controller;
 
-
 import org.example.model.Car;
-import org.example.model.CarTransaction;
 import org.example.model.Dog;
 import org.example.model.Person;
-
+import org.example.model.ResultOperation;
 import org.example.repository.Repository;
 import org.example.service.Service;
 import org.example.utils.DataSeeder;
-import org.example.utils.ResultOperation;
 import org.example.utils.Utils;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Controller {
@@ -21,11 +19,10 @@ public class Controller {
 
         System.out.println("Hello to Transaction Cars Person to Person!");
 
-        // 1. Instanciamos el repositorio único vacío
         Repository repo = new Repository();
 
-        // 2. Poblamos el repositorio dinámicamente usando Java Faker (Exactamente 10 objetos en total)
         DataSeeder.seedRepository(repo);
+
         Scanner scan = new Scanner(System.in);
 
         while (true) {
@@ -37,28 +34,31 @@ public class Controller {
                 case "1":
                     personSubMenu(scan, repo);
                     break;
+
                 case "2":
                     dogSubMenu(scan, repo);
                     break;
+
                 case "3":
                     carSubMenu(scan, repo);
                     break;
+
                 case "4":
-                    // buyCar uses current dummy data for demo; enhance later if needed
                     runBuyCarDemo(scan, repo);
                     break;
+
                 case "5":
                     carTransactionSubMenu(scan, repo);
                     break;
+
                 case "6":
-                    adoptDogFlow(scan, repo);
-                    break;
-                case "7":
                     dogAdoptionSubMenu(scan, repo);
                     break;
-                case "8":
+
+                case "7":
                     System.out.println("Goodbye!");
                     return;
+
                 default:
                     System.out.println("Invalid option, try again.");
             }
@@ -66,35 +66,47 @@ public class Controller {
     }
 
     // ===== PERSON SUBMENU =====
+
     private static void personSubMenu(Scanner scan, Repository repo) {
         while (true) {
             Utils.personMenu();
             String opt = Utils.askMenuOption(scan);
+
             switch (opt) {
                 case "1":
                     String name = Utils.askString(scan, "Enter name: ");
                     int age = Utils.askInt(scan, "Enter age: ");
                     Service.createPerson(name, age, repo);
                     break;
+
                 case "2":
                     Service.getAllPeople(repo);
                     break;
+
                 case "3":
                     String pid = Utils.askString(scan, "Enter person ID: ");
                     Service.getPersonById(pid, repo);
                     break;
+
                 case "4":
-                    String uid = Utils.askString(scan, "Enter person ID to update: ");
-                    String newName = Utils.askString(scan, "New name (leave blank to keep): ");
-                    int newAge = Utils.askInt(scan, "New age (-1 to keep): ");
+                    String uid = Utils.askString(
+                            scan, "Enter person ID to update: ");
+                    String newName = Utils.askString(
+                            scan, "New name (leave blank to keep): ");
+                    int newAge = Utils.askInt(
+                            scan, "New age (-1 to keep): ");
                     Service.updatePerson(uid, newName, newAge, repo);
                     break;
+
                 case "5":
-                    String did = Utils.askString(scan, "Enter person ID to delete: ");
+                    String did = Utils.askString(
+                            scan, "Enter person ID to delete: ");
                     Service.deletePerson(did, repo);
                     break;
+
                 case "6":
                     return;
+
                 default:
                     System.out.println("Invalid option.");
             }
@@ -102,10 +114,12 @@ public class Controller {
     }
 
     // ===== DOG SUBMENU =====
+
     private static void dogSubMenu(Scanner scan, Repository repo) {
         while (true) {
             Utils.dogMenu();
             String opt = Utils.askMenuOption(scan);
+
             switch (opt) {
                 case "1":
                     String name = Utils.askString(scan, "Enter dog name: ");
@@ -113,26 +127,37 @@ public class Controller {
                     int age = Utils.askInt(scan, "Enter age: ");
                     Service.createDog(name, breed, age, repo);
                     break;
+
                 case "2":
                     Service.getAllDogs(repo);
                     break;
+
                 case "3":
                     String did = Utils.askString(scan, "Enter dog ID: ");
                     Service.getDogById(did, repo);
                     break;
+
                 case "4":
-                    String uid = Utils.askString(scan, "Enter dog ID to update: ");
-                    String newName = Utils.askString(scan, "New name (blank=keep): ");
-                    String newBreed = Utils.askString(scan, "New breed (blank=keep): ");
-                    int newAge = Utils.askInt(scan, "New age (-1=keep): ");
+                    String uid = Utils.askString(
+                            scan, "Enter dog ID to update: ");
+                    String newName = Utils.askString(
+                            scan, "New name (blank=keep): ");
+                    String newBreed = Utils.askString(
+                            scan, "New breed (blank=keep): ");
+                    int newAge = Utils.askInt(
+                            scan, "New age (-1=keep): ");
                     Service.updateDog(uid, newName, newBreed, newAge, repo);
                     break;
+
                 case "5":
-                    String delId = Utils.askString(scan, "Enter dog ID to delete: ");
+                    String delId = Utils.askString(
+                            scan, "Enter dog ID to delete: ");
                     Service.deleteDog(delId, repo);
                     break;
+
                 case "6":
                     return;
+
                 default:
                     System.out.println("Invalid option.");
             }
@@ -140,10 +165,12 @@ public class Controller {
     }
 
     // ===== CAR SUBMENU =====
+
     private static void carSubMenu(Scanner scan, Repository repo) {
         while (true) {
             Utils.carMenu();
             String opt = Utils.askMenuOption(scan);
+
             switch (opt) {
                 case "1":
                     String make = Utils.askString(scan, "Enter make: ");
@@ -151,124 +178,254 @@ public class Controller {
                     int year = Utils.askInt(scan, "Enter year: ");
                     Service.createCar(make, model, year, repo);
                     break;
+
                 case "2":
                     Service.getAllCars(repo);
                     break;
+
                 case "3":
                     String cid = Utils.askString(scan, "Enter car ID: ");
                     Service.getCarById(cid, repo);
                     break;
+
                 case "4":
-                    String uid = Utils.askString(scan, "Enter car ID to update: ");
-                    String newMake = Utils.askString(scan, "New make (blank=keep): ");
-                    String newModel = Utils.askString(scan, "New model (blank=keep): ");
-                    int newYear = Utils.askInt(scan, "New year (-1=keep): ");
+                    String uid = Utils.askString(
+                            scan, "Enter car ID to update: ");
+                    String newMake = Utils.askString(
+                            scan, "New make (blank=keep): ");
+                    String newModel = Utils.askString(
+                            scan, "New model (blank=keep): ");
+                    int newYear = Utils.askInt(
+                            scan, "New year (-1=keep): ");
                     Service.updateCar(uid, newMake, newModel, newYear, repo);
                     break;
+
                 case "5":
-                    String delId = Utils.askString(scan, "Enter car ID to delete: ");
+                    String delId = Utils.askString(
+                            scan, "Enter car ID to delete: ");
                     Service.deleteCar(delId, repo);
                     break;
+
                 case "6":
                     return;
+
                 default:
                     System.out.println("Invalid option.");
             }
         }
     }
 
-    // ===== CAR TRANSACTION (READ ONLY) SUBMENU =====
-    private static void carTransactionSubMenu(Scanner scan, Repository repo) {
+    // ===== CAR TRANSACTION SUBMENU =====
+
+    private static void carTransactionSubMenu(
+            Scanner scan, Repository repo) {
+
         while (true) {
             Utils.carTransactionMenu();
             String opt = Utils.askMenuOption(scan);
+
             switch (opt) {
                 case "1":
                     Service.getAllCarTransactions(repo);
                     break;
+
                 case "2":
-                    String tid = Utils.askString(scan, "Enter transaction ID: ");
+                    String tid = Utils.askString(
+                            scan, "Enter transaction ID: ");
                     Service.getCarTransactionById(tid, repo);
                     break;
+
                 case "3":
                     return;
+
                 default:
                     System.out.println("Invalid option.");
             }
         }
     }
 
-    // ===== DOG ADOPTION (READ ONLY) SUBMENU =====
-    private static void dogAdoptionSubMenu(Scanner scan, Repository repo) {
-        while (true) {
-            Utils.dogAdoptionMenu();
-            String opt = Utils.askMenuOption(scan);
-            switch (opt) {
-                case "1":
-                    ResultOperation resAll = Service.getAllDogAdoptions(repo);
-                    System.out.println("resultOperation: " + resAll);
-                    break;
-                case "2":
-                    String tid = Utils.askString(scan, "Enter adoption ID: ");
-                    ResultOperation resById = Service.getDogAdoptionById(tid, repo);
-                    System.out.println("resultOperation: " + resById);
-                    break;
-                case "3":
-                    return;
-                default:
-                    System.out.println("Invalid option.");
-            }
-        }
-    }
+    // ===== BUY CAR DEMO =====
 
-    private static void adoptDogFlow(Scanner scan, Repository repo) {
-        System.out.println("Welcome to ADOPT A DOG (person <- dog)");
-        String pid = Utils.askString(scan, "Enter person ID: ");
-        String did = Utils.askString(scan, "Enter dog ID: ");
-        int fee = Utils.askInt(scan, "Enter adoption fee: ");
-
-        Person adopter = repo.getPersonById(pid.trim());
-        Dog dog = repo.getDogById(did.trim());
-
-        ResultOperation res = Service.adoptDog(adopter, dog, fee, repo);
-        System.out.println("resultOperation: " + res);
-    }
-
-    // Demo buyCar using two people from repo (or create minimal if none)
     private static void runBuyCarDemo(Scanner scan, Repository repo) {
         System.out.println("Welcome to BUY A CAR (person to person)");
 
-        java.util.ArrayList<Person> people = repo.getAllPeople();
+        ArrayList<Person> people = repo.getAllPeople();
+
         if (people.size() < 2) {
-            System.out.println("Need at least two people. Creating demo people...");
-            org.example.utils.ResultOperation rsSeller = Service.createPerson("DemoSeller", 30, repo);
-            org.example.utils.ResultOperation rsBuyer = Service.createPerson("DemoBuyer", 25, repo);
-            org.example.utils.ResultOperation rsCar = Service.createCar("DemoMake", "DemoModel", 2020, repo);
-            Person seller = rsSeller.isSuccess() ? (Person) rsSeller.getUpdatedObject() : null;
-            Car demoCar = rsCar.isSuccess() ? (Car) rsCar.getUpdatedObject() : null;
-            if (seller != null && demoCar != null) {
+            System.out.println(
+                    "Need at least two people. Creating demo people...");
+
+            Person seller = Service.createPerson("DemoSeller", 30, repo);
+            Service.createPerson("DemoBuyer", 25, repo);
+
+            Car demoCar = Service.createCar(
+                    "DemoMake", "DemoModel", 2020, repo);
+
+            if (seller != null) {
                 seller.setCar(demoCar);
             }
+
             people = repo.getAllPeople();
         }
 
-        // Pick first two for simplicity (or let user choose later)
         Person seller = people.get(0);
-        Person buyer = people.size() > 1 ? people.get(1) : people.get(0);
+        Person buyer = people.size() > 1
+                ? people.get(1)
+                : people.get(0);
 
         if (seller.getCar() == null) {
-            System.out.println("Seller has no car. Create one for seller first (use Car menu).");
+            System.out.println(
+                    "Seller has no car. Create one for seller first.");
             return;
         }
+
         if (buyer.getCar() != null) {
-            System.out.println("Buyer already has a car. Use menus to adjust data first.");
+            System.out.println(
+                    "Buyer already has a car. Adjust the data first.");
             return;
         }
 
         int price = Utils.askInt(scan, "Enter price: ");
-        if (price < 0) price = 0;
 
-        ResultOperation buyRes = Service.buyCar(buyer, seller, price, repo);
-        System.out.println("resultOperation: " + buyRes);
+        if (price < 0) {
+            price = 0;
+        }
+
+        Service.buyCar(buyer, seller, price, repo);
+    }
+
+    // ===== DOG ADOPTION SUBMENU =====
+
+    private static void dogAdoptionSubMenu(
+            Scanner scan, Repository repo) {
+
+        while (true) {
+            Utils.dogAdoptionMenu();
+            String opt = Utils.askMenuOption(scan);
+
+            switch (opt) {
+                case "1":
+                    Service.getAllDogAdoptions(repo);
+                    break;
+
+                case "2":
+                    String adoptionId = Utils.askString(
+                            scan, "Enter adoption ID: ");
+                    Service.getDogAdoptionById(adoptionId, repo);
+                    break;
+
+                case "3":
+                    String personId = Utils.askString(
+                            scan, "Enter adopter person ID: ");
+                    String dogId = Utils.askString(
+                            scan, "Enter dog ID: ");
+
+                    Person adopter = repo.getPersonById(personId);
+                    Dog dog = repo.getDogById(dogId);
+
+                    if (adopter == null) {
+                        System.out.println("Person not found.");
+                        break;
+                    }
+
+                    if (dog == null) {
+                        System.out.println("Dog not found.");
+                        break;
+                    }
+
+                    int fee = Utils.askInt(
+                            scan, "Enter adoption fee: ");
+
+                    ResultOperation adoptionResult =
+                            Service.adoptDog(adopter, dog, fee, repo);
+
+                    printResult(adoptionResult);
+                    break;
+
+                case "4":
+                    String ownerId = Utils.askString(
+                            scan, "Enter person ID: ");
+
+                    Person owner = repo.getPersonById(ownerId);
+
+                    if (owner == null) {
+                        System.out.println("Person not found.");
+                        break;
+                    }
+
+                    ResultOperation dogsResult =
+                            Service.getDogsByOwner(owner, repo);
+
+                    printResult(dogsResult);
+                    break;
+
+                case "5":
+                    String searchedDogId = Utils.askString(
+                            scan, "Enter dog ID: ");
+
+                    Dog searchedDog = repo.getDogById(searchedDogId);
+
+                    if (searchedDog == null) {
+                        System.out.println("Dog not found.");
+                        break;
+                    }
+
+                    ResultOperation ownersResult =
+                            Service.getOwnersByDog(searchedDog, repo);
+
+                    printResult(ownersResult);
+                    break;
+
+                case "6":
+                    String returningPersonId = Utils.askString(
+                            scan, "Enter person ID: ");
+                    String returningDogId = Utils.askString(
+                            scan, "Enter dog ID: ");
+
+                    Person returningPerson =
+                            repo.getPersonById(returningPersonId);
+                    Dog returningDog =
+                            repo.getDogById(returningDogId);
+
+                    if (returningPerson == null) {
+                        System.out.println("Person not found.");
+                        break;
+                    }
+
+                    if (returningDog == null) {
+                        System.out.println("Dog not found.");
+                        break;
+                    }
+
+                    ResultOperation returnResult =
+                            Service.returnDog(
+                                    returningPerson, returningDog, repo);
+
+                    printResult(returnResult);
+                    break;
+
+                case "7":
+                    return;
+
+                default:
+                    System.out.println("Invalid option.");
+            }
+        }
+    }
+
+    // ===== RESULT DISPLAY =====
+
+    private static void printResult(ResultOperation result) {
+        if (result == null) {
+            System.out.println("No result returned.");
+            return;
+        }
+
+        System.out.println(result.getResult());
+
+        if (result.getReason() != null
+                && !result.getReason().isBlank()) {
+            System.out.println(result.getReason());
+        }
     }
 }
